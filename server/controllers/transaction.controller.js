@@ -36,7 +36,16 @@ exports.create = (req, res) => {
 
 // Retrieve all Transactions from the database.
 exports.findAll = (req, res) => {
-  
+    Transaction.findAll()
+      .then(data => {
+        res.send(data);
+      })
+      .catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while retrieving tutorials."
+        });
+      });
 };
 
 // Find a single Transaction with an id

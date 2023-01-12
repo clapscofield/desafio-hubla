@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import axios from "axios";
+import TransactionDataService from "./services/transaction.service";
 import "./MainPage.css";
 
 const MainPage = () => {
@@ -13,7 +14,7 @@ const MainPage = () => {
   const [sellerName, setSellerName] = useState([]);
 
   const getAllSales = useCallback(async () => {
-    const data = await axios.get("/api/sales/all");
+    const data = await TransactionDataService.getAll();
     setSales(data.data.rows.map(row => row.value));
   }, []);
 
@@ -21,7 +22,7 @@ const MainPage = () => {
     async event => {
       event.preventDefault();
 
-      await axios.post("/api/sales", {
+      await axios.post("/api/transactions", {
         value
       });
 
