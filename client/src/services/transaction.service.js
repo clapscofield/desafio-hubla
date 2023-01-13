@@ -2,15 +2,13 @@ import http from "../Http-common";
 
 class TransactionDataService {
   getAll() {
-    return http.get("/transactions");
+    return http.get("/transactions").catch(function (error) {
+            console.log(JSON.stringify(error))
+        });
   }
 
   create(data) {
     return http.post("/transactions", data);
-  }
-
-  findByTitle(title) {
-    return http.get(`/transactions?title=${title}`);
   }
 }
 
