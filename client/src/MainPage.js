@@ -15,15 +15,7 @@ import Button from '@mui/material/Button';
 
 const MainPage = () => {
   const [sales, setSales] = useState([]);
-  const [dialog, setDialog] = useState([]);
-  const [file, setFile] = useState([]);
-
-  //Transaction information
-  const [type, setType] = useState([]);
-  const [date, setDate] = useState([]);
-  const [product, setProduct] = useState([]);
-  const [value, setValue] = useState([]);
-  const [sellerName, setSellerName] = useState([]);
+  const [fileData, setFileData] = useState([]);
 
   const getAllSales = useCallback(async () => {
     const data = await TransactionDataService.getAll();
@@ -31,19 +23,11 @@ const MainPage = () => {
       setSales(data.data);
   }, []);
 
-  const saveTransaction = useCallback(
-    async event => {
-      event.preventDefault();
-
-      await axios.post("/api/transactions", {
-        value
-      });
-
-      setValue("");
+  const saveTransaction = async (transaction) => {
+      const result = await TransactionDataService.create(transaction);
+      console.log(result);
       getAllSales();
-    },
-    [value, getAllSales]
-  );
+  };
 
   useEffect(() => {
     getAllSales();
@@ -60,9 +44,41 @@ const MainPage = () => {
     },
   }));
 
-  const selectFile = (event) => {
-    setFile(event.target.files);
+  const processFileContent = (data) => {
+    var listData = data.split('\n');
+
+    listData.forEach(row => {
+      var transaction = {
+        type: row.substr(0,1),
+        date: row.substr(1,25),
+        product: row.substr(26,30),
+        value: row.substr(55,10),
+        salesman: row.substr(66, 20)
+      };
+      saveTransaction(transaction);
+    });
   }
+
+
+  const readFile = (event) => {
+      var file = event.target.files[0];
+
+      //Get file as string
+      if (file) {
+        new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function (evt) {
+            resolve(evt.target.result);
+          };
+          reader.readAsText(file);
+          reader.onerror = reject;
+        })
+        .then(processFileContent)
+        .catch(function(err) {
+          console.log(err)
+        });
+      }
+  };
 
 
   return (
@@ -108,12 +124,13 @@ const MainPage = () => {
             name="btn-upload"
             style={{ display: 'none' }}
             type="file"
-            onChange={selectFile} />
+            accept="text/*"
+            onChange={readFile} />
           <Button
             className="btn-choose"
             variant="outlined"
             component="span" >
-             Choose File
+             Choose TXT File
           </Button>
         </label>
     </div>

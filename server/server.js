@@ -14,13 +14,22 @@ db.sequelize.sync();
 //     console.log("Drop and re-sync db.");
 //   });
 
-var corsOptions = {
-  origin: "http://localhost:8080",
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
-};
+// var corsOptions = {
+//   origin: "http://localhost:8080",
+//   credentials:true,            //access-control-allow-credentials:true
+//   optionSuccessStatus:200
+// };
 
 app.use(express.json());
+
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', "*");
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}
+
+app.use(allowCrossDomain);
 
 app.use(cors());
 
