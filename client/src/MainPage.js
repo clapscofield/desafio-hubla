@@ -11,10 +11,12 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
-
+import Typography from '@mui/material/Typography';
 
 const MainPage = () => {
   const [sales, setSales] = useState([]);
+  const [producers, setProducers] = useState([]);
+  const [transactionByProducer, setTransactionByProducer] = useState([]);
   const [fileData, setFileData] = useState([]);
 
   const getAllSales = useCallback(async () => {
@@ -23,6 +25,36 @@ const MainPage = () => {
       setSales(data.data);
   }, []);
 
+  const getAllDistinctProducers = useCallback(async () => {
+    const data = await TransactionDataService.getAll();
+    if(data){
+      setSales(data.data);
+      const uniqueProducers = [...new Set(data.data.map((item) => item.salesman))];
+      console.log(uniqueProducers);
+      setProducers(uniqueProducers);
+    }
+  }, []);
+
+  const getAllTransactionsByProducers = async (producers) => {
+    const transactionsProducers = [];
+    for (const producer of producers) {
+      const data = {
+        name: producer
+      }
+      const transaction = await TransactionDataService.getByProducer(data);
+      const producerTransaction = {
+        producer: producer,
+        transaction:  transaction.data
+      }
+      transactionsProducers.push(producerTransaction);
+    }
+    return transactionsProducers;
+};
+
+const getAllTransactionsByProducersFunction = async (producers) => {
+  const data = await getAllTransactionsByProducers(producers);
+  setTransactionByProducer(data);
+}
   const saveTransaction = async (transaction) => {
       const result = await TransactionDataService.create(transaction);
       console.log(result);
@@ -30,7 +62,8 @@ const MainPage = () => {
   };
 
   useEffect(() => {
-    getAllSales();
+    //getAllSales();
+    getAllDistinctProducers();
   }, []);
 
 
@@ -83,40 +116,50 @@ const MainPage = () => {
 
   return (
     <div>
-      <Button variant="contained" onClick={getAllSales}>Refresh table</Button>
+      <Typography variant="h3" gutterBottom>
+        Sales by Producers
+      </Typography>
       <br />
-      <span className="title">Sales</span>
-      <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650, maxWidth: 800}} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell>Id</StyledTableCell>
-            <StyledTableCell align="right">Type</StyledTableCell>
-            <StyledTableCell align="right">Date</StyledTableCell>
-            <StyledTableCell align="right">Product</StyledTableCell>
-            <StyledTableCell align="right">Value</StyledTableCell>
-            <StyledTableCell align="right">Salesman</StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {sales.map((row) => (
-            <TableRow
-              key={row.id}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {row.id}
-              </TableCell>
-              <TableCell align="right">{row.type}</TableCell>
-              <TableCell align="right">{row.date}</TableCell>
-              <TableCell align="right">{row.product}</TableCell>
-              <TableCell align="right">{row.value}</TableCell>
-              <TableCell align="right">{row.salesman}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+      <Button variant="contained" onClick={() => getAllTransactionsByProducersFunction(producers)}>Refresh table</Button>
+      <br />
+      {transactionByProducer && transactionByProducer.map((row) => (
+        <>
+            <Typography variant="h4" gutterBottom>
+              {row.producer}
+            </Typography>
+             <TableContainer component={Paper}>
+             <Table sx={{ minWidth: 650, maxWidth: 800}} aria-label="simple table">
+               <TableHead>
+                 <TableRow>
+                   <StyledTableCell>Id</StyledTableCell>
+                   <StyledTableCell align="right">Type</StyledTableCell>
+                   <StyledTableCell align="right">Date</StyledTableCell>
+                   <StyledTableCell align="right">Product</StyledTableCell>
+                   <StyledTableCell align="right">Value</StyledTableCell>
+                   <StyledTableCell align="right">Salesman</StyledTableCell>
+                 </TableRow>
+               </TableHead>
+               <TableBody>
+                 {row.transaction && row.transaction.map((item) => (
+                   <TableRow
+                     key={item.id}
+                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                   >
+                     <TableCell component="th" scope="row">
+                       {row.id}
+                     </TableCell>
+                     <TableCell align="right">{item.type}</TableCell>
+                     <TableCell align="right">{item.date}</TableCell>
+                     <TableCell align="right">{item.product}</TableCell>
+                     <TableCell align="right">{item.value}</TableCell>
+                     <TableCell align="right">{item.salesman}</TableCell>
+                   </TableRow>
+                 ))}
+               </TableBody>
+             </Table>
+           </TableContainer>
+           </>
+      ))}
     <br />
     <label htmlFor="btn-upload">
           <input

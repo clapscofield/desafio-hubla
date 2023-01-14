@@ -22,5 +22,17 @@ module.exports = {
     });
 
     return res.json(transaction);
-  }
+  },
+
+  async getByProducer (req, res) {
+    const { name } = req.body
+    const transaction = await Transaction.findAll({
+      where: {
+        salesman: "clarisse"
+      }
+    });
+
+    return res.json(transaction);
+  },
+
 };

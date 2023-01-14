@@ -12,6 +12,14 @@ class TransactionDataService {
         console.log(JSON.stringify(error))
     });;
   }
+
+  getByProducer(data) {
+    if(data){
+        return http.get("/transactions/getByProducer", data).catch(function (error) {
+            console.log(JSON.stringify(error))
+        });;
+    }
+  }
 }
 
 export default new TransactionDataService();
