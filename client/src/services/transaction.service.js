@@ -13,12 +13,10 @@ class TransactionDataService {
     });;
   }
 
-  getByProducer(data) {
-    if(data){
-        return http.get("/transactions/getByProducer", data).catch(function (error) {
-            console.log(JSON.stringify(error))
-        });;
-    }
+  getByProducer(name) {
+    return http.get("/transactions/getByProducer/", {params: { name: name }}).catch(function (error) {
+        console.log(JSON.stringify(error))
+    });;
   }
 }
 

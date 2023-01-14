@@ -17,7 +17,6 @@ const MainPage = () => {
   const [sales, setSales] = useState([]);
   const [producers, setProducers] = useState([]);
   const [transactionByProducer, setTransactionByProducer] = useState([]);
-  const [fileData, setFileData] = useState([]);
 
   const getAllSales = useCallback(async () => {
     const data = await TransactionDataService.getAll();
@@ -41,7 +40,7 @@ const MainPage = () => {
       const data = {
         name: producer
       }
-      const transaction = await TransactionDataService.getByProducer(data);
+      const transaction = await TransactionDataService.getByProducer(producer);
       const producerTransaction = {
         producer: producer,
         transaction:  transaction.data
@@ -120,8 +119,24 @@ const getAllTransactionsByProducersFunction = async (producers) => {
         Sales by Producers
       </Typography>
       <br />
-      <Button variant="contained" onClick={() => getAllTransactionsByProducersFunction(producers)}>Refresh table</Button>
+      <Button variant="contained" onClick={() => getAllTransactionsByProducersFunction(producers)}>Get all transactions by producers</Button>
       <br />
+      <br />
+    <label htmlFor="btn-upload">
+          <input
+            id="btn-upload"
+            name="btn-upload"
+            style={{ display: 'none' }}
+            type="file"
+            accept="text/*"
+            onChange={readFile} />
+          <Button
+            className="btn-choose"
+            variant="outlined"
+            component="span" >
+             Choose TXT File
+          </Button>
+        </label>
       {transactionByProducer && transactionByProducer.map((row) => (
         <>
             <Typography variant="h4" gutterBottom>
@@ -160,22 +175,6 @@ const getAllTransactionsByProducersFunction = async (producers) => {
            </TableContainer>
            </>
       ))}
-    <br />
-    <label htmlFor="btn-upload">
-          <input
-            id="btn-upload"
-            name="btn-upload"
-            style={{ display: 'none' }}
-            type="file"
-            accept="text/*"
-            onChange={readFile} />
-          <Button
-            className="btn-choose"
-            variant="outlined"
-            component="span" >
-             Choose TXT File
-          </Button>
-        </label>
     </div>
   );
 };

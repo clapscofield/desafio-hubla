@@ -25,10 +25,10 @@ module.exports = {
   },
 
   async getByProducer (req, res) {
-    const { name } = req.body
+    console.log(req.query);
     const transaction = await Transaction.findAll({
       where: {
-        salesman: "clarisse"
+        salesman: req.query.name
       }
     });
 
