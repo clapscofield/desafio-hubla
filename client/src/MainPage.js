@@ -11,8 +11,8 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 
 const MainPage = () => {
   const [producers, setProducers] = useState([]);
@@ -20,21 +20,16 @@ const MainPage = () => {
   const [file, setFile] = useState([]);
   const [uploadSucess, setUploadSucess] = useState(false);
   const [error, setError] = useState(false);
+  const [uploadDisable, setUploadDisable] = useState(true);
 
   const getAllDistinctProducers = useCallback(async () => {
-    await TransactionDataService.getAll()
-    .then((res) => {
-      if(res){
-        const uniqueProducers = [...new Set(res.data.map((item) => item.salesman))];
-        setProducers(uniqueProducers);
-      } else {
-        setError("Internal Server Error, try again later.");
-      }
-    })
-   .catch((err) => {
-      setUploadSucess(false);
-      setError(err.response.data || "Internal Server Error, try again later.");
-    })
+    const result = await TransactionDataService.getAll();
+    if (result) {
+      const uniqueProducers = [...new Set(res.data.map((item) => item.salesman))];
+      setProducers(uniqueProducers);
+    } else {
+      setError("Internal Server Error, try again later.");
+    }
   }, []);
 
   const getAllTransactionsByProducers = async (producers) => {
@@ -42,23 +37,23 @@ const MainPage = () => {
     const transactionsProducers = [];
     for (const producer of producers) {
       await TransactionDataService.getByProducer(producer)
-      .then((res) => {
-        if(res){
-          const total = transactionValue(res.data);
-          const producerTransaction = {
-            producer: producer,
-            transaction: res.data,
-            total: total
-          };
-          transactionsProducers.push(producerTransaction);
-        } else {
-          setError("Internal Server Error, try again later.");
-        }
-      })
-     .catch((err) => {
-        setUploadSucess(false);
-        setError(err.response.data || "Internal Server Error, try again later.");
-      })
+        .then((res) => {
+          if (res) {
+            const total = transactionValue(res.data);
+            const producerTransaction = {
+              producer: producer,
+              transaction: res.data,
+              total: total
+            };
+            transactionsProducers.push(producerTransaction);
+          } else {
+            setError("Internal Server Error, try again later.");
+          }
+        })
+        .catch((err) => {
+          setUploadSucess(false);
+          setError(err.response.data || "Internal Server Error, try again later.");
+        });
     }
     return transactionsProducers;
   };
@@ -82,25 +77,31 @@ const MainPage = () => {
     const data = await getAllTransactionsByProducers(producers);
     setTransactionByProducer(data);
   };
-  
+
   const saveTransaction = async (transaction) => {
-    if (transaction.type == "" || transaction.product == "" || transaction.date == "" || transaction.salesman == "" || transaction.value == ""){
+    if (
+      transaction.type === "" ||
+      transaction.product === "" ||
+      transaction.date === "" ||
+      transaction.salesman === "" ||
+      transaction.value === ""
+    ) {
       setError("Transaction file data is broken or incomplete. Broken lines were not uploaded.");
       return;
     }
     await TransactionDataService.create(transaction)
-    .then((res) => {
-      if(res){
-        setUploadSucess(true);
-        getAllTransactionsByProducersFunction(producers);
-      } else {
-        setError("Internal Server Error, try again later.");
-      }
-    })
-   .catch((err) => {
-      setUploadSucess(false);
-      setError(err.response.data || "Internal Server Error, try again later.");
-    })
+      .then((res) => {
+        if (res) {
+          setUploadSucess(true);
+          getAllTransactionsByProducersFunction(producers);
+        } else {
+          setError("Internal Server Error, try again later.");
+        }
+      })
+      .catch((err) => {
+        setUploadSucess(false);
+        setError(err.response.data || "Internal Server Error, try again later.");
+      });
   };
 
   useEffect(() => {
@@ -120,6 +121,7 @@ const MainPage = () => {
   const handleFileChange = (e) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
+      setUploadDisable(false);
     }
   };
 
@@ -154,16 +156,17 @@ const MainPage = () => {
           console.log(err);
         });
     }
-    setFile([]);
+    setFile(null);
+    setUploadDisable(true);
   };
 
   const handleCloseAlert = () => {
     setUploadSucess(false);
-  }
+  };
 
   const handleCloseAlertError = () => {
     setError();
-  }
+  };
 
   return (
     <div>
@@ -171,7 +174,7 @@ const MainPage = () => {
         Sales by Producers
       </Typography>
       <br />
-      <Button variant="contained" onClick={() => getAllTransactionsByProducersFunction(producers)}>
+      <Button variant="contained" data-testid="getAll" onClick={() => getAllTransactionsByProducersFunction(producers)}>
         Get all transactions by producers
       </Button>
       <br />
@@ -180,19 +183,21 @@ const MainPage = () => {
         Forms: Upload File of Transactions
       </Typography>
       <div>
-        <Button variant="contained" component="label">
+        <Button data-testid="chooseFile" variant="contained" component="label">
           Choose File
-          <input type="file" hidden onChange={handleFileChange} />
+          <input data-testid="fileInput" type="file" hidden onChange={handleFileChange} />
         </Button>
-        <Typography variant="p">{file && file.name && file.type && `${file.name} - ${file.type}`}</Typography>
+        <Typography data-testid="fileName" variant="p">
+          {file && file.name && file.type && `${file.name} - ${file.type}`}
+        </Typography>
         <br />
         <br />
-        <Button variant="contained" component="label" onClick={readFile}>
+        <Button data-testid="upload" variant="contained" component="label" onClick={readFile} disabled={uploadDisable}>
           Upload
         </Button>
       </div>
       {uploadSucess && (
-        <Alert severity="success" onClose={() => handleCloseAlert()}>
+        <Alert data-testid="alertSuccess" severity="success" onClose={() => handleCloseAlert()}>
           <AlertTitle>Success</AlertTitle>
           Your file was uploaded!
         </Alert>
@@ -237,9 +242,9 @@ const MainPage = () => {
                         </TableRow>
                       </>
                     ))}
-                                          <Typography variant="p" gutterBottom>
-                          Total: {row.total}
-                        </Typography>
+                  <Typography variant="p" gutterBottom>
+                    Total: {row.total}
+                  </Typography>
                 </TableBody>
               </Table>
             </TableContainer>
