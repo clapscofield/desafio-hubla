@@ -1,5 +1,4 @@
 import { useCallback, useState, useEffect } from "react";
-import axios from "axios";
 import TransactionDataService from "./services/transaction.service";
 import "./MainPage.css";
 import { styled } from "@mui/material/styles";
@@ -16,42 +15,50 @@ import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 
 const MainPage = () => {
-  const [sales, setSales] = useState([]);
   const [producers, setProducers] = useState([]);
   const [transactionByProducer, setTransactionByProducer] = useState([]);
   const [file, setFile] = useState([]);
   const [uploadSucess, setUploadSucess] = useState(false);
   const [error, setError] = useState(false);
 
-  const getAllSales = useCallback(async () => {
-    const data = await TransactionDataService.getAll();
-    if (data) setSales(data.data);
-  }, []);
-
   const getAllDistinctProducers = useCallback(async () => {
-    const data = await TransactionDataService.getAll();
-    if (data) {
-      setSales(data.data);
-      const uniqueProducers = [...new Set(data.data.map((item) => item.salesman))];
-      console.log(uniqueProducers);
-      setProducers(uniqueProducers);
-    }
+    await TransactionDataService.getAll()
+    .then((res) => {
+      if(res){
+        const uniqueProducers = [...new Set(res.data.map((item) => item.salesman))];
+        setProducers(uniqueProducers);
+      } else {
+        setError("Internal Server Error, try again later.");
+      }
+    })
+   .catch((err) => {
+      setUploadSucess(false);
+      setError(err.response.data || "Internal Server Error, try again later.");
+    })
   }, []);
 
   const getAllTransactionsByProducers = async (producers) => {
+    getAllDistinctProducers();
     const transactionsProducers = [];
     for (const producer of producers) {
-      const data = {
-        name: producer
-      };
-      const transaction = await TransactionDataService.getByProducer(producer);
-      const total = transactionValue(transaction.data);
-      const producerTransaction = {
-        producer: producer,
-        transaction: transaction.data,
-        total: total
-      };
-      transactionsProducers.push(producerTransaction);
+      await TransactionDataService.getByProducer(producer)
+      .then((res) => {
+        if(res){
+          const total = transactionValue(res.data);
+          const producerTransaction = {
+            producer: producer,
+            transaction: res.data,
+            total: total
+          };
+          transactionsProducers.push(producerTransaction);
+        } else {
+          setError("Internal Server Error, try again later.");
+        }
+      })
+     .catch((err) => {
+        setUploadSucess(false);
+        setError(err.response.data || "Internal Server Error, try again later.");
+      })
     }
     return transactionsProducers;
   };
@@ -60,12 +67,12 @@ const MainPage = () => {
   const transactionValue = (transactions) => {
     var result = 0;
     for (const transaction of transactions) {
-      if (transaction.type == 1 || transaction.type == 2 || transaction.type == 4) {
+      if (transaction.type === 1 || transaction.type === 2 || transaction.type === 4) {
         result += transaction.value;
-      } else if (transaction.type == 3) {
+      } else if (transaction.type === 3) {
         result -= transaction.value;
       } else {
-        console.log("tratamento erro: transaction with invalid type");
+        setError("Transaction " + transaction.id + " with invalid type, data error.");
       }
     }
     return result;
@@ -75,20 +82,30 @@ const MainPage = () => {
     const data = await getAllTransactionsByProducers(producers);
     setTransactionByProducer(data);
   };
+  
   const saveTransaction = async (transaction) => {
-    const result = await TransactionDataService.create(transaction);
-    if (result) {
-      setUploadSucess(true);
-      getAllTransactionsByProducersFunction(producers);
-    } else {
-      setError(result);
+    if (transaction.type == "" || transaction.product == "" || transaction.date == "" || transaction.salesman == "" || transaction.value == ""){
+      setError("Transaction file data is broken or incomplete. Broken lines were not uploaded.");
+      return;
     }
+    await TransactionDataService.create(transaction)
+    .then((res) => {
+      if(res){
+        setUploadSucess(true);
+        getAllTransactionsByProducersFunction(producers);
+      } else {
+        setError("Internal Server Error, try again later.");
+      }
+    })
+   .catch((err) => {
+      setUploadSucess(false);
+      setError(err.response.data || "Internal Server Error, try again later.");
+    })
   };
 
   useEffect(() => {
-    //getAllSales();
     getAllDistinctProducers();
-  }, []);
+  }, [getAllDistinctProducers]);
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -144,6 +161,10 @@ const MainPage = () => {
     setUploadSucess(false);
   }
 
+  const handleCloseAlertError = () => {
+    setError();
+  }
+
   return (
     <div>
       <Typography variant="h3" gutterBottom>
@@ -173,7 +194,13 @@ const MainPage = () => {
       {uploadSucess && (
         <Alert severity="success" onClose={() => handleCloseAlert()}>
           <AlertTitle>Success</AlertTitle>
-          Your file was uploaded — <strong>refreshing table!</strong>
+          Your file was uploaded!
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" onClose={() => handleCloseAlertError()}>
+          <AlertTitle>Error</AlertTitle>
+          {error}
         </Alert>
       )}
       {transactionByProducer &&

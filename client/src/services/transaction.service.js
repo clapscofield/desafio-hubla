@@ -3,8 +3,8 @@ import http from "../Http-common";
 class TransactionDataService {
   getAll() {
     return http.get("/transactions").catch(function (error) {
-            console.log(JSON.stringify(error))
-        });
+        console.log(JSON.stringify(error.message))
+    });;
   }
 
   create(data) {
@@ -15,7 +15,7 @@ class TransactionDataService {
 
   getByProducer(name) {
     return http.get("/transactions/getByProducer/", {params: { name: name }}).catch(function (error) {
-        console.log(JSON.stringify(error))
+        console.log(JSON.stringify(error.message))
     });;
   }
 }
