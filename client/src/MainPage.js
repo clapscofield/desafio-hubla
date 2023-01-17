@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
+import { transactionValue } from "./utils/utils";
 
 const MainPage = () => {
   const [producers, setProducers] = useState([]);
@@ -25,7 +26,7 @@ const MainPage = () => {
   const getAllDistinctProducers = useCallback(async () => {
     const result = await TransactionDataService.getAll();
     if (result) {
-      const uniqueProducers = [...new Set(res.data.map((item) => item.salesman))];
+      const uniqueProducers = [...new Set(result.data.map((item) => item.salesman))];
       setProducers(uniqueProducers);
     } else {
       setError("Internal Server Error, try again later.");
@@ -40,6 +41,9 @@ const MainPage = () => {
         .then((res) => {
           if (res) {
             const total = transactionValue(res.data);
+            if (total === -1){
+              setError("Transaction with invalid type, data error.");
+            }
             const producerTransaction = {
               producer: producer,
               transaction: res.data,
@@ -56,21 +60,6 @@ const MainPage = () => {
         });
     }
     return transactionsProducers;
-  };
-
-  //Pode melhorar buscando valores no banco.
-  const transactionValue = (transactions) => {
-    var result = 0;
-    for (const transaction of transactions) {
-      if (transaction.type === 1 || transaction.type === 2 || transaction.type === 4) {
-        result += transaction.value;
-      } else if (transaction.type === 3) {
-        result -= transaction.value;
-      } else {
-        setError("Transaction " + transaction.id + " with invalid type, data error.");
-      }
-    }
-    return result;
   };
 
   const getAllTransactionsByProducersFunction = async (producers) => {
