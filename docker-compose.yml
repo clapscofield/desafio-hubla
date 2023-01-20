@@ -1,0 +1,25 @@
+x-common-variables: &common-variables
+  MYSQL_USER: "b7332f4e5a001a"
+  MYSQL_PASSWORD: "9eec8d6e"
+  MYSQL_DATABASE: "heroku_5e0532025c7915f"
+  REACT_APP_SERVER_PORT: 8000
+
+services:
+  server:
+    build: ./server
+    container_name: node_server_container
+    ports:
+      - 8080:8080
+    volumes:
+      - ./server:/app
+    command: node server.js
+  client:
+    build: ./client
+    container_name: client_container
+    ports:
+      - 3000:3000
+    volumes:
+      - ./client/src:/app/src
+    links:
+      - server
+    command: npm start

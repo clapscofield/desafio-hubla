@@ -2,7 +2,6 @@ import http from "../Http-common";
 
 class TransactionDataService {
   getAll() {
-    console.log('to aqui');
     return http.get("/transactions").catch(function (error) {
         console.log(JSON.stringify(error.message))
     });;
