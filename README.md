@@ -37,3 +37,7 @@ To run the tests, you can enter the folder corresponding to the client or server
 ```sh
   npm test
 ```
+## Next steps
+The project could improve and grow in many ways, not only in the design but also in accessing the data. As it is a small challenge, there was no concern with the amount of data accessed and how to treat them as quickly as possible since our example data is few and the application works well enough for a small txt file.
+
+In addition, to make the project more streamlined and on time, it was decided to deal directly with the different types of sales. An improvement would be creating a type table to collect the data of types and relate to the transaction table in a scalable and efficient way.
