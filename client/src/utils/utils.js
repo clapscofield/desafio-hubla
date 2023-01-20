@@ -1,5 +1,4 @@
-  //Pode melhorar buscando valores no banco.
-  const transactionValue = (transactions) => {
+const transactionValue = (transactions) => {
     var result = 0;
     for (const transaction of transactions) {
       if (transaction.type === 1 || transaction.type === 2 || transaction.type === 4) {
